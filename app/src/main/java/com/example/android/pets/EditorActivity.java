@@ -15,6 +15,17 @@
  */
 package com.example.android.pets;
 
+import static com.example.android.pets.data.PetContract.PetEntry.COLUMN_PET_BREED;
+import static com.example.android.pets.data.PetContract.PetEntry.COLUMN_PET_GENDER;
+import static com.example.android.pets.data.PetContract.PetEntry.COLUMN_PET_NAME;
+import static com.example.android.pets.data.PetContract.PetEntry.COLUMN_PET_WEIGHT;
+import static com.example.android.pets.data.PetContract.PetEntry.GENDER_FEMALE;
+import static com.example.android.pets.data.PetContract.PetEntry.GENDER_MALE;
+import static com.example.android.pets.data.PetContract.PetEntry.GENDER_UNKNOWN;
+import static com.example.android.pets.data.PetContract.PetEntry.TABLE_NAME;
+
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +37,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
+
+import com.example.android.pets.data.DbHelper;
 
 /**
  * Allows user to create a new pet or edit an existing one.
@@ -86,11 +100,11 @@ public class EditorActivity extends AppCompatActivity {
                 String selection = (String) parent.getItemAtPosition(position);
                 if (!TextUtils.isEmpty(selection)) {
                     if (selection.equals(getString(R.string.gender_male))) {
-                        mGender = 1; // Male
+                        mGender = GENDER_MALE; // Male
                     } else if (selection.equals(getString(R.string.gender_female))) {
-                        mGender = 2; // Female
+                        mGender = GENDER_FEMALE; // Female
                     } else {
-                        mGender = 0; // Unknown
+                        mGender = GENDER_UNKNOWN; // Unknown
                     }
                 }
             }
@@ -117,7 +131,8 @@ public class EditorActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                insertPet();
+                finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -130,5 +145,20 @@ public class EditorActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void insertPet() {
+        SQLiteDatabase sqldb = (new DbHelper(this)).getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(COLUMN_PET_NAME, mNameEditText.getText().toString().trim());
+        cv.put(COLUMN_PET_GENDER, mGender);
+        cv.put(COLUMN_PET_BREED, mBreedEditText.getText().toString().trim());
+        cv.put(COLUMN_PET_WEIGHT, mWeightEditText.getText().toString().trim());
+        long id = sqldb.insert(TABLE_NAME, null, cv);
+        if(id!=-1){
+            Toast.makeText(this, "Pet added with id : "+id,Toast.LENGTH_SHORT).show();
+        } else{
+            Toast.makeText(this, "Error adding pet ", Toast.LENGTH_SHORT).show();
+        }
     }
 }
